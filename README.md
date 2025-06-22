@@ -72,7 +72,6 @@ You can play animations using VRMA.
 | bevy_vrm1 | bevy   |
 |-----------|--------|
 | 0.1.0 ~   | 0.16   |
-| 0.3.0 ~   | 0.16.1 |
 
 ## Credits
 
