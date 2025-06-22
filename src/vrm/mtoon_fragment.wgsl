@@ -152,7 +152,7 @@ fn apply_directional_lights(in: MToonInput) -> vec3<f32>{
     var shade_color: vec3<f32> = calc_shade_color(in);
     var shading: f32 = 0.0;
     for (var i: u32 = 0u; i < lights.n_directional_lights; i = i + 1u) {
-        if (lights.directional_lights[i].skip != 0u || (lights.directional_lights[i].flags & DIRECTIONAL_LIGHT_FLAGS_SHADOWS_ENABLED_BIT) == 0u) {
+        if (lights.directional_lights[i].flags & DIRECTIONAL_LIGHT_FLAGS_SHADOWS_ENABLED_BIT) == 0u {
             continue;
         }
         shading += calc_mtoon_lighting_shading(in, i);
