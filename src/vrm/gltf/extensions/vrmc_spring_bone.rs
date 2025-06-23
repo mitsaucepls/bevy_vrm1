@@ -118,7 +118,8 @@ impl ColliderShape {
                 let translation = collider.transform_point(Vec3::from(sphere.offset));
                 let r = joint_radius + sphere.radius * max_collider_scale;
                 let delta = *next_tail - translation;
-                if delta.length() <= r * r {
+                let distance_squared = delta.length_squared();
+                if distance_squared > 0.0 && distance_squared <= r * r {
                     let dir = delta.normalize();
                     let pos_from_collider = translation + dir * r;
                     *next_tail = head_global_pos
