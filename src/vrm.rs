@@ -1,17 +1,18 @@
 pub(crate) mod expressions;
 pub(crate) mod gltf;
 pub(crate) mod humanoid_bone;
+mod initialize;
 mod loader;
 mod look_at;
 mod mtoon;
-mod spawn;
 mod spring_bone;
 
+use crate::macros::marker_component;
 use crate::new_type;
 use crate::vrm::humanoid_bone::VrmHumanoidBonePlugin;
+use crate::vrm::initialize::VrmInitializePlugin;
 use crate::vrm::loader::{VrmAsset, VrmLoaderPlugin};
 use crate::vrm::look_at::LookAtPlugin;
-use crate::vrm::spawn::VrmSpawnPlugin;
 use crate::vrm::spring_bone::VrmSpringBonePlugin;
 use bevy::app::{App, Plugin};
 use bevy::asset::AssetApp;
@@ -27,8 +28,8 @@ pub mod prelude {
         loader::{VrmAsset, VrmHandle},
         look_at::LookAt,
         mtoon::prelude::*,
-        BoneRestGlobalTransform, BoneRestTransform, Vrm, VrmBone, VrmExpression, VrmPath,
-        VrmPlugin,
+        BoneRestGlobalTransform, BoneRestTransform, Initialized, Vrm, VrmBone, VrmExpression,
+        VrmPath, VrmPlugin,
     };
 }
 
@@ -52,6 +53,11 @@ new_type!(
 #[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
 pub struct Vrm;
 
+impl Vrm {
+    pub const EXPRESSIONS_ROOT: &'static str = "VRMC_vrm.expressions";
+    pub const ROOT_BONE: &'static str = "VRMC_vrm.root_bone";
+}
+
 /// The path to the VRM file.
 /// This component is automatically inserted after the [`VrmHandle`](crate::prelude::VrmHandle) is loaded.
 #[derive(Debug, Reflect, Clone, Component)]
@@ -68,19 +74,24 @@ impl VrmPath {
 }
 
 /// The bone's initial transform.
-#[derive(Debug, Copy, Clone, Component, Deref, Reflect)]
+#[derive(Debug, Copy, Clone, Component, Deref, Reflect, Default)]
 #[reflect(Component)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
 pub struct BoneRestTransform(pub Transform);
 
 /// The bone's initial global transform.
-#[derive(Debug, Copy, Clone, Component, Deref, Reflect)]
+#[derive(Debug, Copy, Clone, Component, Deref, Reflect, Default)]
 #[reflect(Component)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", reflect(Serialize, Deserialize))]
 pub struct BoneRestGlobalTransform(pub GlobalTransform);
 
+marker_component!(
+    /// A marker component attached to the entity of VRM.
+    /// This component is automatically inserted after the [`VrmHandle`](crate::prelude::VrmHandle) is loaded.
+    Initialized
+);
 /// The main plugin for VRM support in Bevy.
 ///
 /// Please refer to [`VrmHandle`](crate::prelude::VrmHandle) for more details.
@@ -93,7 +104,7 @@ impl Plugin for VrmPlugin {
     ) {
         app.init_asset::<VrmAsset>().add_plugins((
             VrmLoaderPlugin,
-            VrmSpawnPlugin,
+            VrmInitializePlugin,
             VrmSpringBonePlugin,
             VrmHumanoidBonePlugin,
             VrmExpressionPlugin,
@@ -105,6 +116,8 @@ impl Plugin for VrmPlugin {
             .register_type::<VrmPath>()
             .register_type::<BoneRestTransform>()
             .register_type::<BoneRestGlobalTransform>()
-            .register_type::<VrmBone>();
+            .register_type::<VrmBone>()
+            .register_type::<VrmExpression>()
+            .register_type::<Initialized>();
     }
 }
